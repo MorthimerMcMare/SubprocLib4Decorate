@@ -4,8 +4,9 @@ version "4.3.1"
 #include "ZScript/Subproc.zsc"
 #include "ZScript/Parallel.zsc"
 
-// New engines version branch (with mixins).
+#include "Examples/ZScriptBase.zsc"
 
+// New engines version branch (with mixins).
 
 class SubprocActor: Actor abstract {
 	Mixin Parallelizing;

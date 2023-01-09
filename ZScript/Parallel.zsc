@@ -9,7 +9,6 @@ enum EParallelExecDirectives {
 	PARSPR_SkipTNT1A0	= PARSPR_SkipTNT1,
 	PARSPR_IgnoreTNT1	= PARSPR_SkipTNT1,
 	PARSPR_IgnoreTNT1A0	= PARSPR_SkipTNT1,
-	PARSPR_Ignore		= PARSPR_None,
 	PARSPR_IgnoreAll	= PARSPR_None,
 	PARSPR_SkipAll		= PARSPR_None,
 
@@ -70,7 +69,7 @@ class SubproclibParallelExecNode play {
 				parstate = parstate.NextState;
 				curtics = parstate.Tics;
 
-				master.SetState( prevMasterState );
+				master.SetState( prevMasterState, true );
 
 				if ( spritesCopyingMode == PARSPR_None || ( spritesCopyingMode == PARSPR_SkipTNT1A0 && newMasterSprite == spriteTNT1A0 ) ) {
 					// Sprite and frame may be changed via codepointers.
