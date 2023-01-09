@@ -82,7 +82,7 @@ To inherit not only from Actor class, you should copy necessary functions [from 
 
 ```Csharp
 // ZScript:
-class DoomImpParallelExample: DoomImp {
+class DoomImpParallelBase: DoomImp {
 	action void PAR_Thread( StateLabel label, int steps = PARSTEPS_Infinite, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
 		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, steps, execparams );
 	}
