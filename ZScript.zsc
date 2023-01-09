@@ -1,12 +1,33 @@
-version "2.4.0"
+version "4.3.1"
 
 #include "ZScript/Util.zsc"
 #include "ZScript/Subproc.zsc"
 #include "ZScript/Parallel.zsc"
 
-// Old engine version compatible branch.
+// New engines version branch (with mixins).
+
 
 class SubprocActor: Actor abstract {
+	Mixin Parallelizing;
+	Mixin Subprocedures;
+}
+
+
+mixin class Parallelizing {
+	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
+	}
+
+	action void PAR_Stop( StateLabel label = NULL ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
+	}
+
+	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
+	}
+} // of mixin class Parallelizing {}
+
+mixin class Subprocedures {
 	SubproclibStatesStackKeeper subprocHandler;
 
 	void SUBP_RemoveHandler( void ) {
@@ -30,16 +51,4 @@ class SubprocActor: Actor abstract {
 	action State SUBP_Return( void ) {
 		return ( invoker.subprocHandler? invoker.subprocHandler.SubprocReturn() : NULL );
 	}
-
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
-	}
-
-	action void PAR_Stop( StateLabel label = NULL ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
-	}
-
-	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
-	}
-} // of class SubprocActor: Actor abstract {}
+} // of mixin class Subprocedures {}

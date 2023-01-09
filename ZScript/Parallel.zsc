@@ -183,7 +183,7 @@ class SubproclibParallelExecKeeper: Inventory {
 			return;
 		}
 
-		if ( globalfreeze || level.Frozen )
+		if ( level.IsFrozen() )
 			return;
 
 		for ( int i = 0; i < threads.Size(); i++ ) {
