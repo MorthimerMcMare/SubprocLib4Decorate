@@ -1,0 +1,36 @@
+// Demonstration of the "PAR_Stop( state )".
+//
+// Class "DoomImpParallelExample" defined in the "/Examples/ZScriptBase.zsc".
+
+Actor EvinceImp: DoomImpParallelExample {
+	Health 75
+
+	States {
+	Missile:
+		TROO E 0 PAR_Thread( "Rotating" )
+		TROO E 0 PAR_Thread( "MissileFireSpawn" )
+	Melee:
+		TROO EF 8 A_FaceTarget
+		TROO G 6 A_TroopAttack 
+		Goto See
+	Rotating:
+		TNT1 AAAAAAAAAAAAAAA 1 A_SetAngle( angle + 11.25 )
+		TNT1 A 2 A_FaceTarget
+		TNT1 A 0 PAR_Stop( "MissileFireSpawn" )
+		TNT1 A 1 PAR_Stop    // "PAR_Stop()" without arguments stops current thread.
+		Stop
+	Pain:
+		TROO H 2
+		TROO H 2 A_Pain
+		Goto See
+	Death:
+		TROO I 0 PAR_Stop( "MissileFireSpawn" )
+		Goto Super::Death
+	XDeath:
+		TROO N 0 PAR_Stop( "MissileFireSpawn" )
+		Goto Super::XDeath
+	MissileFireSpawn:
+		TNT1 A 2 A_SpawnItemEx( "SpawnFire", -radius, FRandom( -96.0, 96.0 ) )
+		Loop
+	}
+}

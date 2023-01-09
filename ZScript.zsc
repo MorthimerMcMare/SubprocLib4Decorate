@@ -4,6 +4,8 @@ version "2.4.0"
 #include "ZScript/Subproc.zsc"
 #include "ZScript/Parallel.zsc"
 
+#include "Examples/ZScriptBase.zsc"
+
 // Old engine version compatible branch.
 
 class SubprocActor: Actor abstract {
