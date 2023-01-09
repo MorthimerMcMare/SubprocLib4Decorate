@@ -1,0 +1,20 @@
+// Class "BaronSubprocExample" defined in the "/Examples/ZScriptBase.zsc".
+
+Actor SubprocBaronOfHell: BaronSubprocBase {
+	States {
+	Spawn:
+		BOSS AABB 5 SUBP_Call( "Wander" )
+		TNT1 A 0 SUBP_Call( "HoofStep" )
+		BOSS CCDD 5 SUBP_Call( "Wander" )
+		TNT1 A 0 SUBP_Call( "HoofStep" )
+		Loop
+	Wander:
+		TNT1 A 0 A_Look
+		TNT1 A 0 A_Wander
+		TNT1 A 0 SUBP_Return
+	HoofStep:
+		TNT1 A 0 A_SpawnItemEx( "SpawnFire", 0, 0, 0, 1, 0, 0, 0, 128 )
+		TNT1 A 0 A_Quake( 2, 4, 0, 512, "" )
+		TNT1 A 0 SUBP_Return
+	}
+}

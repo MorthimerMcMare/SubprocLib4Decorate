@@ -17,6 +17,8 @@ enum EParallelExecDirectives {
 	PAREXEC_NoFunctionsCall = 0x0010
 }
 
+const PARSTEPS_Infinite = -1;
+
 
 class SubproclibParallelExecNode play {
 	SubproclibParallelExecKeeper keeper;
@@ -25,13 +27,14 @@ class SubproclibParallelExecNode play {
 
 	State parstate, startstate;
 	int curtics;
+	int stepsleft;
 
 	EParallelExecDirectives spritesCopyingMode;
 	bool noFunctionsCallFlag;
 
 	private SpriteID spriteTNT1A0;
 
-	static SubproclibParallelExecNode Create( SubproclibParallelExecKeeper initkeeper, State initstate, EParallelExecDirectives initparams = PARSPR_SkipTNT1 ) {
+	static SubproclibParallelExecNode Create( SubproclibParallelExecKeeper initkeeper, State initstate, int initsteps, EParallelExecDirectives initparams ) {
 		SubproclibParallelExecNode newthread = new( "SubproclibParallelExecNode" );
 		newthread.keeper = initkeeper;
 		newthread.master = initkeeper.owner;
@@ -40,6 +43,7 @@ class SubproclibParallelExecNode play {
 		newthread.noFunctionsCallFlag = !!( initparams & PAREXEC_NoFunctionsCall );
 		newthread.spriteTNT1A0 = Actor.GetSpriteIndex( "TNT1A0" );
 		newthread.parstate = newthread.startstate = initstate;
+		newthread.stepsleft = ( initsteps == 0? -1 : initsteps );
 		newthread.curtics = ( initstate.Tics < 1? initstate.Tics : initstate.Tics + 1 );
 
 		return newthread;
@@ -57,6 +61,11 @@ class SubproclibParallelExecNode play {
 		// 4) Rollback master changes.
 
 		if ( curtics != -1 && ( --curtics <= 0 ) ) {
+			if ( stepsleft > 0 && --stepsleft == 0 ) {
+				Destroy();
+				return;
+			}
+
 			State prevMasterState = master.curstate;
 			SpriteID prevMasterSprite = master.Sprite;
 			int prevMasterFrame = master.Frame;
@@ -109,12 +118,12 @@ class SubproclibParallelExecKeeper: Inventory {
 			oldkeeper.Destroy();
 	}
 
-	SubproclibParallelExecNode AddThread( StateLabel label, EParallelExecDirectives initparams = PARSPR_SkipTNT1A0 ) {
+	SubproclibParallelExecNode AddThread( StateLabel label, int steps = PARSTEPS_Infinite, EParallelExecDirectives initparams = PARSPR_SkipTNT1A0 ) {
 		State stparallel = owner.ResolveState( label );
 		SubproclibParallelExecNode newthread = NULL;
 
 		if ( stparallel ) {
-			newthread = SubproclibParallelExecNode.Create( self, stparallel, initparams );
+			newthread = SubproclibParallelExecNode.Create( self, stparallel, steps, initparams );
 			threads.Push( newthread );
 		} else {
 			SubproclibGeneral.StateMessage( owner, GetClassName() .. "::AddThread()", "Cannot resolve a StateLabel" );

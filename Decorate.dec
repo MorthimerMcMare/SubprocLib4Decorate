@@ -3,7 +3,7 @@
 //
 
 #include "Examples/SubprocTorches.dec"
+#include "Examples/SubprocBaron.dec"
 
-#include "Examples/ParallelDoomImp.dec"
 #include "Examples/ParallelTechLamp.dec"
-
+#include "Examples/ParallelDoomImp.dec"

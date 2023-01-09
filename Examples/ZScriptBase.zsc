@@ -1,5 +1,12 @@
-// DoomImp base parallel class for the "/Examples/ParallelDoomImp.zsc".
+// Base parallel classes for:
+//	"/Examples/ParallelDoomImp.zsc";
+//	"/Examples/SubprocBaron.zsc".
 
-class DoomImpParallelExample: DoomImp {
+class DoomImpParallelBase: DoomImp {
 	Mixin Parallelizing;
 }
+
+class BaronSubprocBase: BaronOfHell {
+	Mixin Subroutines;
+}
+

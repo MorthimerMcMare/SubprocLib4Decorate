@@ -1,4 +1,4 @@
-// Tech lamp showing two usage variants of the parallelization.
+// Tech lamp showing some usage variants of the parallelization.
 //
 // States "Parallel1*" imitates a default tech lamp glowing a in two different threads.
 // "Parallel2" demonstrates a temporary event, in this case, in first spawn tics.
@@ -14,7 +14,8 @@ Actor ParTechLamp: SubprocActor {
 	Spawn:
 		TLMP A 0
 		TLMP A 0 PAR_Thread( "Parallel1Start" )
-		TLMP A 0 PAR_Thread( "Parallel2", PARSPR_SkipAll )
+		TLMP A 0 PAR_Thread( "Parallel2" )
+		TLMP A 0 PAR_Thread( "Parallel3", 6, PARSPR_SkipAll )
 	SpawnLoop:
 		TLMP AC 8
 		Loop
@@ -24,8 +25,12 @@ Actor ParTechLamp: SubprocActor {
 		TLMP BD 8
 		Loop
 	Parallel2:
-		TNT1 AAAAAAAA 5 A_SpawnItemEx( "BulletPuff", FRandom( -radius, radius ) * 0.7, FRandom( -radius, radius ) * 0.7, FRandom( 50, 75 ) )
+		TNT1 AAAAAAAAAAA 5 A_SpawnItemEx( "BulletPuff", FRandom( -radius, radius ) * 0.7, FRandom( -radius, radius ) * 0.7, FRandom( 50, 75 ) )
+		TNT1 A 0 PAR_Thread( "Parallel3", 17, PARSPR_SkipAll )
 		TNT1 A 1 PAR_Stop
 		Stop
+	Parallel3:
+		CYBR E 5 A_SpawnItemEx( "GrenadeSmokeTrail", FRandom( -radius, radius ), FRandom( -radius, radius ), height + FRandom( 5.0, 30.0 ), 0, 0, FRandom( 0.0, 5.0 ) )
+		Loop
 	}
 }

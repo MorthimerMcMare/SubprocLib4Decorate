@@ -11,27 +11,35 @@ class SubproclibStateStackNode play {
 	}
 }
 
-class SubproclibStatesStackKeeper play {
+class SubproclibStatesStackKeeper: Inventory {
 	const const_StackSize = 256;
 
-	Actor master;
 	State subprocStack[ const_StackSize ];
 	int stackCurIndex;
 
 	private void StateMessage( String methodname, String msg ) {
-		SubproclibGeneral.StateMessage( master, GetClassName() .. "::" .. methodname, msg );
+		SubproclibGeneral.StateMessage( owner, GetClassName() .. "::" .. methodname, msg );
 	}
 
-	static SubproclibStatesStackKeeper Create( Actor initmaster ) {
-		SubproclibStatesStackKeeper newstack = new( 'SubproclibStatesStackKeeper' );
-		newstack.master = initmaster;
-		newstack.stackCurIndex = 0;
+	static SubproclibStatesStackKeeper GetKeeper( Actor keeperowner ) {
+		SubproclibStatesStackKeeper newkeeper = SubproclibStatesStackKeeper( keeperowner.FindInventory( "SubproclibStatesStackKeeper" ) );
 
-		return newstack;
+		if ( !newkeeper )
+			newkeeper = SubproclibStatesStackKeeper( keeperowner.GiveInventoryType( "SubproclibStatesStackKeeper" ) );
+
+		return newkeeper;
 	}
+
+	static void RemoveKeeper( Actor keepermaster ) {
+		Inventory oldkeeper = keepermaster.FindInventory( "SubproclibStatesStackKeeper" );
+
+		if ( oldkeeper )
+			oldkeeper.Destroy();
+	}
+
 
 	State SubprocCall( StateLabel label ) {
-		State stsubproc = master.ResolveState( label );
+		State stsubproc = owner.ResolveState( label );
 
 		if ( !stsubproc ) {
 			StateMessage( "SubprocCall", "Cannot resolve a StateLabel" );
@@ -43,7 +51,7 @@ class SubproclibStatesStackKeeper play {
 
 		if ( stsubproc != subprocStack[ stackCurIndex + 1 ] ) {
 			if ( stackCurIndex < const_StackSize - 1 ) {
-				subprocStack[ stackCurIndex ] = master.curstate;
+				subprocStack[ stackCurIndex ] = owner.curstate;
 				stackCurIndex++;
 				subprocStack[ stackCurIndex ] = stsubproc;
 				outstate = stsubproc;
