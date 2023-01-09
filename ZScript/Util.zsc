@@ -1,0 +1,32 @@
+// Internal library utils.
+
+struct SubproclibGeneral play {
+	static void Message( String msg ) {
+		String lastch = msg.Mid( msg.Length() - 1, 1 );
+
+		if ( !( lastch == "." || lastch == "!" || lastch == "?" || lastch == ":" || lastch == " " ) )
+			msg = msg .. ".";
+
+		console.printf( TEXTCOLOR_DARKGRAY .. "[SUBP] \c-" .. msg );
+	}
+
+	static String State2String( State st ) {
+		return String.Format( "%s %c %i", SpriteID( st.Sprite ) .. "", st.Frame + 65, st.Tics );
+	}
+
+	static void StateMessage( Actor who, String methodname, String msg ) {
+		if ( methodname.Mid( methodname.Length() - 2, 2 ) != "()" )
+			methodname = methodname .. "()";
+
+		String lastch = msg.Mid( msg.Length() - 2, 1 );
+
+		if ( !( lastch == "." || lastch == "!" || lastch == "?" || lastch == ":" || lastch == " " ) )
+			msg = msg .. " in";
+		else
+			msg = msg .. "In";
+
+		SubproclibGeneral.Message( String.Format( "%s. \c-%s state \"%s\" of actor %s.",
+									methodname, msg, TEXTCOLOR_SAPPHIRE .. SubproclibGeneral.State2String( who.curstate ) .. TEXTCOLOR_NORMAL, who.GetClassName() ) );
+	}
+
+} // of struct SubproclibGeneral play {}

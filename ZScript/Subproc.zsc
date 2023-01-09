@@ -1,0 +1,70 @@
+//
+
+class SubproclibStateStackNode play {
+	State st;
+
+	static SubproclibStateStackNode Create( State initstate ) {
+		SubproclibStateStackNode newnode = new( 'SubproclibStateStackNode' );
+		newnode.st = initstate;
+
+		return newnode;
+	}
+}
+
+class SubproclibStatesStackKeeper play {
+	const const_StackSize = 256;
+
+	Actor master;
+	State subprocStack[ const_StackSize ];
+	int stackCurIndex;
+
+	private void StateMessage( String methodname, String msg ) {
+		SubproclibGeneral.StateMessage( master, GetClassName() .. "::" .. methodname, msg );
+	}
+
+	static SubproclibStatesStackKeeper Create( Actor initmaster ) {
+		SubproclibStatesStackKeeper newstack = new( 'SubproclibStatesStackKeeper' );
+		newstack.master = initmaster;
+		newstack.stackCurIndex = 0;
+
+		return newstack;
+	}
+
+	State SubprocCall( StateLabel label ) {
+		State stsubproc = master.ResolveState( label );
+
+		if ( !stsubproc ) {
+			StateMessage( "SubprocCall", "Cannot resolve a StateLabel" );
+			return NULL;
+		}
+
+		State outstate = NULL;
+		int stacksize = subprocStack.Size();
+
+		if ( stsubproc != subprocStack[ stackCurIndex + 1 ] ) {
+			if ( stackCurIndex < const_StackSize - 1 ) {
+				subprocStack[ stackCurIndex ] = master.curstate;
+				stackCurIndex++;
+				subprocStack[ stackCurIndex ] = stsubproc;
+				outstate = stsubproc;
+
+			} else {
+				StateMessage( "SubprocCall", "Call stack overflow, limited at depth " .. stackCurIndex .. "." );
+			}
+		} else {
+			// Forgetting a last subproc:
+			subprocStack[ stackCurIndex + 1 ] = NULL;
+		}
+
+		return outstate;
+	} // of State SubprocCall( StateLabel label ) {}
+
+	State SubprocReturn( void ) {
+		if ( stackCurIndex > 0 )
+			return subprocStack[ --stackCurIndex ];
+
+		StateMessage( "SubprocReturn", "Call stack underflow." );
+		return NULL;
+	} // of State SubprocReturn( void ) {}
+
+} // of class SubproclibStatesStackKeeper play {}
