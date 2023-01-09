@@ -12,7 +12,7 @@ Note that this is a beta-version of the library.
 
 ## API
 
-See an "/Examples/" folder for them.
+See [an "/Examples/" folder](https://github.com/MorthimerMcMare/SubprocLib4Decorate/tree/new_engine_versions/Examples) for them.
 
 ### Subroutines
 
@@ -41,10 +41,10 @@ Internal functions, initializes and deletes a subroutines handler. May be used f
 All threads terminate when actor is gone.
 
 ```
-PAR_Thread( State startstate[, int params] )
+PAR_Thread( State startstate[, int steps[, int params]] )
 ```
 
-Starts a parallel thread on current actor. `params` defines behaviour of this thread and may use next constants:
+Starts a parallel thread on current actor. `steps` defines a countdown (in states with non-zero delay) to terminate this thread; by default equals to `PARSTEPS_Infinite` (-1). `params` defines behaviour of this thread and may use next constants:
 
 * `PARSPR_All` or `PARSPR_Any` to copy all of the sprites/frames, including "TNT1A0";
 
@@ -57,9 +57,9 @@ Starts a parallel thread on current actor. `params` defines behaviour of this th
 ```
 PAR_Stop( [State threadid] )
 ```
-Stops current thread (if argument is omitted) or thread, specified by its first state.
+Stops the current thread, if argument is omitted, or else the thread specified by its first state.
 
-Note: when thread reaches [a "Stop" keyword](https://zdoom.org/wiki/Actor_states#Flow_control) or disappears in any other manner, main actor destroys, too. So writing a "`TNT1 A 0 PAR_Stop`" may be a bad idea; better set larger delay, like "`TNT1 A 1 PAR_Stop`".
+Note: when thread reaches [a "Stop" keyword](https://zdoom.org/wiki/Actor_states#Flow_control) or disappears in any other manner, main actor destroys, too. So writing a "`TNT1 A 0 PAR_Stop`" may be a bad idea; better set larger delay, like "`TNT1 A 1 PAR_Stop`", or use a `steps` argument in the "`PAR_Thread()`".
 
 
 <p><br></p>
@@ -71,14 +71,37 @@ Note: when thread reaches [a "Stop" keyword](https://zdoom.org/wiki/Actor_states
 Just use a predefined Mixin in some ZScript file:
 ```Csharp
 // ZScript:
-class DoomImpParallelExample: DoomImp {
+class DoomImpParallelBase: DoomImp {
 	Mixin Parallelizing;
 }
 ```
 
+### GZDoom 2.4.0
+
+To inherit not only from Actor class, you should copy necessary functions [from the base "SubprocActor" class](https://github.com/MorthimerMcMare/SubprocLib4Decorate/blob/compatibility/ZScript.zsc#L11) to some ZScript file. For example, if you want to use only a parallelization for the DoomImp replacement:
+
+```Csharp
+// ZScript:
+class DoomImpParallelExample: DoomImp {
+	action void PAR_Thread( StateLabel label, int steps = PARSTEPS_Infinite, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, steps, execparams );
+	}
+	action void PAR_Stop( StateLabel label = NULL ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
+	}
+	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
+	}
+}
+```
+
+### Decorate
+
+Same for both cases.
+
 ```Csharp
 // Decorate:
-Actor EvinceImp: DoomImpParallelExample {
+Actor EvinceImp: DoomImpParallelBase {
 	Health 75
 
 	States {
@@ -111,24 +134,3 @@ Actor EvinceImp: DoomImpParallelExample {
 	}
 }
 ```
-
-### GZDoom 2.4.0
-
-To inherit not only from Actor class, you should copy necessary functions [from the base "SubprocActor" class](https://github.com/MorthimerMcMare/SubprocLib4Decorate/blob/compatibility/ZScript.zsc#L11) to some ZScript file. For example, if you want to use only a parallelization for the DoomImp replacement:
-
-```Csharp
-// ZScript:
-class DoomImpParallelExample: DoomImp {
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
-	}
-	action void PAR_Stop( StateLabel label = NULL ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
-	}
-	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
-	}
-}
-```
-
-And the Decorate example is same.
