@@ -2,7 +2,7 @@
 //
 // Class "DoomImpParallelExample" defined in the "/Examples/ZScriptBase.zsc".
 
-Actor EvinceImp: DoomImpParallelExample {
+Actor EvinceImp: DoomImpParallelBase {
 	Health 75
 
 	States {
@@ -29,6 +29,8 @@ Actor EvinceImp: DoomImpParallelExample {
 	XDeath:
 		TROO N 0 PAR_Stop( "MissileFireSpawn" )
 		Goto Super::XDeath
+
+	// It won't loop indefinitely because of the "PAR_Stop( 'MissileFireSpawn' )":
 	MissileFireSpawn:
 		TNT1 A 2 A_SpawnItemEx( "SpawnFire", -radius, FRandom( -96.0, 96.0 ) )
 		Loop

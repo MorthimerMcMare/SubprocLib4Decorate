@@ -9,32 +9,27 @@ version "2.4.0"
 // Old engine version compatible branch.
 
 class SubprocActor: Actor abstract {
-	SubproclibStatesStackKeeper subprocHandler;
-
-	void SUBP_RemoveHandler( void ) {
-		if ( subprocHandler )
-			subprocHandler.Destroy();
-	}
-
-	void SUBP_InitHandler( void ) {
-		SUBP_RemoveHandler();
-		subprocHandler = SubproclibStatesStackKeeper.Create( self );
-	}
-
-	override void PostBeginPlay() {
-		SUBP_InitHandler();
-	}
-
+	/* Subroutines */
 	action State SUBP_Call( StateLabel label ) {
-		return ( invoker.subprocHandler? invoker.subprocHandler.SubprocCall( label ) : NULL );
+		return SubproclibStatesStackKeeper.GetKeeper( invoker ).SubprocCall( label );
 	}
 
 	action State SUBP_Return( void ) {
-		return ( invoker.subprocHandler? invoker.subprocHandler.SubprocReturn() : NULL );
+		return SubproclibStatesStackKeeper.GetKeeper( invoker ).SubprocReturn();
 	}
 
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
+	void SUBP_RemoveHandler( void ) {
+		SubproclibStatesStackKeeper.RemoveKeeper( self );
+	}
+
+	void SUBP_InitHandler( void ) {
+		SubproclibStatesStackKeeper.GetKeeper( self );
+	}
+
+
+	/* Parallelization */
+	action void PAR_Thread( StateLabel label, int steps = PARSTEPS_Infinite, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, steps, execparams );
 	}
 
 	action void PAR_Stop( StateLabel label = NULL ) {

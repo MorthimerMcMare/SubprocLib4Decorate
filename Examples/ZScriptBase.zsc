@@ -1,8 +1,10 @@
-// DoomImp base parallel class for the "/Examples/ParallelDoomImp.zsc".
+// Base parallel classes for:
+//	"/Examples/ParallelDoomImp.zsc";
+//	"/Examples/SubprocBaron.zsc".
 
-class DoomImpParallelExample: DoomImp {
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
+class DoomImpParallelBase: DoomImp {
+	action void PAR_Thread( StateLabel label, int steps = PARSTEPS_Infinite, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, steps, execparams );
 	}
 
 	action void PAR_Stop( StateLabel label = NULL ) {
@@ -13,3 +15,14 @@ class DoomImpParallelExample: DoomImp {
 		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
 	}
 }
+
+class BaronSubprocBase: BaronOfHell {
+	action State SUBP_Call( StateLabel label ) {
+		return SubproclibStatesStackKeeper.GetKeeper( invoker ).SubprocCall( label );
+	}
+
+	action State SUBP_Return( void ) {
+		return SubproclibStatesStackKeeper.GetKeeper( invoker ).SubprocReturn();
+	}
+}
+
