@@ -1,15 +1,5 @@
 // DoomImp base parallel class for the "/Examples/ParallelDoomImp.zsc".
 
 class DoomImpParallelExample: DoomImp {
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
-	}
-
-	action void PAR_Stop( StateLabel label = NULL ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
-	}
-
-	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
-	}
+	Mixin Parallelizing;
 }

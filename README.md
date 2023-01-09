@@ -66,22 +66,13 @@ Note: when thread reaches [a "Stop" keyword](https://zdoom.org/wiki/Actor_states
 
 ## Engine version differences
 
-### GZDoom 2.4.0
+### GZDoom 4.3.1
 
-To inherit not only from Actor class, you should copy necessary functions [from the base "SubprocActor" class](https://github.com/MorthimerMcMare/SubprocLib4Decorate/blob/compatibility/ZScript.zsc#L11) to some ZScript file. For example, if you want to use only a parallelization for the DoomImp replacement:
-
+Just use a predefined Mixin in some ZScript file:
 ```Csharp
 // ZScript:
 class DoomImpParallelExample: DoomImp {
-	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
-	}
-	action void PAR_Stop( StateLabel label = NULL ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
-	}
-	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
-		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
-	}
+	Mixin Parallelizing;
 }
 ```
 
@@ -121,14 +112,22 @@ Actor EvinceImp: DoomImpParallelExample {
 }
 ```
 
+### GZDoom 2.4.0
 
-### GZDoom 4.3.1
+To inherit not only from Actor class, you should copy necessary functions [from the base "SubprocActor" class](https://github.com/MorthimerMcMare/SubprocLib4Decorate/blob/compatibility/ZScript.zsc#L11) to some ZScript file. For example, if you want to use only a parallelization for the DoomImp replacement:
 
-Just use a predefined Mixin in some ZScript file:
 ```Csharp
 // ZScript:
 class DoomImpParallelExample: DoomImp {
-	Mixin Parallelizing;
+	action void PAR_Thread( StateLabel label, EParallelExecDirectives execparams = PARSPR_SkipTNT1 ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).AddThread( label, execparams );
+	}
+	action void PAR_Stop( StateLabel label = NULL ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).RemoveThread( label );
+	}
+	action void PAR_FrozeFlow( StateLabel label, bool freezethread ) {
+		SubproclibParallelExecKeeper.GetKeeper( invoker ).ThreadFrozeControl( label, freezethread );
+	}
 }
 ```
 
