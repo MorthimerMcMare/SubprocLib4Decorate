@@ -1,20 +1,14 @@
 //
 
 class SubproclibStateStackNode play {
-	State st;
-
-	static SubproclibStateStackNode Create( State initstate ) {
-		SubproclibStateStackNode newnode = new( 'SubproclibStateStackNode' );
-		newnode.st = initstate;
-
-		return newnode;
-	}
+	State funcaddr;
+	State retaddr;
 }
 
 class SubproclibStatesStackKeeper: Inventory {
 	const const_StackSize = 256;
 
-	State subprocStack[ const_StackSize ];
+	SubproclibStateStackNode subprocStack[ const_StackSize ];
 	int stackCurIndex;
 
 	private void StateMessage( String methodname, String msg ) {
@@ -47,13 +41,18 @@ class SubproclibStatesStackKeeper: Inventory {
 		}
 
 		State outstate = NULL;
-		int stacksize = subprocStack.Size();
 
-		if ( stsubproc != subprocStack[ stackCurIndex + 1 ] ) {
+		if ( subprocStack[ stackCurIndex ] == NULL )
+			subprocStack[ stackCurIndex ] = new( 'SubproclibStateStackNode' );
+
+		if ( stsubproc != subprocStack[ stackCurIndex ].funcaddr ) {
 			if ( stackCurIndex < const_StackSize - 1 ) {
-				subprocStack[ stackCurIndex ] = owner.curstate;
+				subprocStack[ stackCurIndex ].retaddr = owner.curstate;
+				subprocStack[ stackCurIndex ].funcaddr = stsubproc;
 				stackCurIndex++;
-				subprocStack[ stackCurIndex ] = stsubproc;
+
+				subprocStack[ stackCurIndex ] = new( 'SubproclibStateStackNode' );
+
 				outstate = stsubproc;
 
 			} else {
@@ -61,7 +60,7 @@ class SubproclibStatesStackKeeper: Inventory {
 			}
 		} else {
 			// Forgetting a last subproc:
-			subprocStack[ stackCurIndex + 1 ] = NULL;
+			subprocStack[ stackCurIndex ].funcaddr = NULL;
 		}
 
 		return outstate;
@@ -69,7 +68,7 @@ class SubproclibStatesStackKeeper: Inventory {
 
 	State SubprocReturn( void ) {
 		if ( stackCurIndex > 0 )
-			return subprocStack[ --stackCurIndex ];
+			return subprocStack[ --stackCurIndex ].retaddr;
 
 		StateMessage( "SubprocReturn", "Call stack underflow." );
 		return NULL;
