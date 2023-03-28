@@ -25,12 +25,13 @@ class SubproclibParallelExecNode play {
 	Actor master;
 	bool frozen;
 
-	State parstate, startstate;
+	State parstate, cmpstate, startstate;
 	int curtics;
 	int stepsleft;
 
 	EParallelExecDirectives spritesCopyingMode;
 	bool noFunctionsCallFlag;
+	bool firstStateTicked;
 
 	private SpriteID spriteTNT1A0;
 
@@ -41,8 +42,10 @@ class SubproclibParallelExecNode play {
 
 		newthread.spritesCopyingMode = initparams & PARSPR_Mask;
 		newthread.noFunctionsCallFlag = !!( initparams & PAREXEC_NoFunctionsCall );
+		newthread.firstStateTicked = false;
 		newthread.spriteTNT1A0 = Actor.GetSpriteIndex( "TNT1A0" );
-		newthread.parstate = newthread.startstate = initstate;
+
+		newthread.parstate = newthread.startstate = newthread.cmpstate = initstate;
 		newthread.stepsleft = ( initsteps == 0? -1 : initsteps );
 		newthread.curtics = ( initstate.Tics < 1? initstate.Tics : initstate.Tics + 1 );
 
@@ -66,19 +69,30 @@ class SubproclibParallelExecNode play {
 				return;
 			}
 
+			// Saving current main stateflow data:
 			State prevMasterState = master.curstate;
 			SpriteID prevMasterSprite = master.Sprite;
 			int prevMasterFrame = master.Frame;
 			int prevMasterTics = master.tics;
 
-			//console.printf( GetClassName() .. "::Tick(). Prev: state " .. prevMasterState .. ", sprite " .. prevMasterSprite .. ", frame %c, tics " .. prevMasterTics, prevMasterFrame + 65 );
+			//console.printf( GetClassName() .. "::ParTick(). Prev: state " .. prevMasterState .. ", sprite " .. prevMasterSprite .. ", frame %c, tics " .. prevMasterTics, prevMasterFrame + 65 );
 
-			if ( master.SetState( parstate.NextState, noFunctionsCallFlag ) ) {
-				SpriteID newMasterSprite = master.Sprite;
+			cmpstate = parstate;
+
+			// Special handling of the start (first) state:
+			if ( firstStateTicked )
 				parstate = parstate.NextState;
+			else
+				firstStateTicked = true;
+
+
+			if ( master.SetState( parstate, noFunctionsCallFlag ) ) {
+				// Updating the parallel thread data:
+				parstate = master.curstate;
+				SpriteID newMasterSprite = master.Sprite;
 				curtics = parstate.Tics;
 
-				master.SetState( prevMasterState, true );
+				master.SetState( prevMasterState, true /* By default: "bool nofunction = false" */ );
 
 				if ( spritesCopyingMode == PARSPR_None || ( spritesCopyingMode == PARSPR_SkipTNT1A0 && newMasterSprite == spriteTNT1A0 ) ) {
 					// Sprite and frame may be changed via codepointers.
@@ -96,6 +110,44 @@ class SubproclibParallelExecNode play {
 		} // of if ( curtics != -1 && ( --curtics <= 0 ) ) {}
 
 	} // of void ParTick() {}
+
+	private String State2Str( State st ) {
+		return SubproclibGeneral.State2String( st );
+	}
+
+	// Returns "true" if state is in the thread closer sequence.
+	bool IsStateDescribesThread( State teststate ) {
+		bool isInStateSeq = false;
+		//String debugstr = "Remove states traceroute (cmp " .. State2Str( cmpstate ) .. "): ";
+
+		if ( cmpstate == teststate ) {
+			isInStateSeq = true;
+			//debugstr.AppendFormat( "state %s itself.", State2Str( nextst ) );
+
+		} else {
+			State nextst = cmpstate;
+
+			do {
+				//debugstr.AppendFormat( "%s; ", State2Str( nextst ) );
+
+				if ( nextst == teststate ) {
+					isInStateSeq = true;
+					break;
+				}
+
+				nextst = nextst.NextState;
+			} while ( nextst && nextst.Tics == 0 );
+
+			if ( nextst == teststate ) {
+				//debugstr.AppendFormat( "%s; ", State2Str( nextst ) );
+				isInStateSeq = true;
+			}
+		}
+
+		//console.printf( "%s%s", debugstr, ( isInStateSeq? " --> is in state seq" : "" ) );
+
+		return isInStateSeq;
+	} // of bool IsStateDescribesThread( State teststate ) {}
 
 } // of class SubproclibParallelExecNode play {}
 
@@ -123,6 +175,8 @@ class SubproclibParallelExecKeeper: Inventory {
 		SubproclibParallelExecNode newthread = NULL;
 
 		if ( stparallel ) {
+			//console.printf( "Adding thread %i.", threads.Size() );
+
 			newthread = SubproclibParallelExecNode.Create( self, stparallel, steps, initparams );
 			threads.Push( newthread );
 		} else {
@@ -152,7 +206,7 @@ class SubproclibParallelExecKeeper: Inventory {
 		int foundindex = -1;
 
 		for ( int i = 0; i < threads.Size(); i++ ) {
-			if ( threads[ i ] && threads[ i ].parstate.NextState == teststate ) {
+			if ( threads[ i ] && threads[ i ].IsStateDescribesThread( teststate ) ) {
 				foundindex = i;
 				break;
 			}
@@ -170,6 +224,8 @@ class SubproclibParallelExecKeeper: Inventory {
 			index = FindThreadByState( owner.curstate );
 
 		if ( index >= 0 ) {
+			//console.printf( "Removing thread %i.", index );
+
 			threads[ index ].Destroy();
 			threads.Delete( index, 1 );
 		}
@@ -183,6 +239,8 @@ class SubproclibParallelExecKeeper: Inventory {
 
 		if ( index >= 0 )
 			threads[ index ].frozen = freezethread;
+		else
+			SubproclibGeneral.StateMessage( owner, GetClassName() .. "::ThreadFrozeControl()", "Cannot resolve a StateLabel" );
 	}
 
 	override void Tick() {
