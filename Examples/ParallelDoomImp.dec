@@ -8,15 +8,15 @@ Actor EvinceImp: DoomImpParallelBase {
 	States {
 	Missile:
 		TROO E 0 PAR_Thread( "Rotating" )
-		TROO E 0 PAR_Thread( "MissileFireSpawn" )
+		TROO E 0 PAR_Thread( "MissileFXSpawn" )
 	Melee:
-		TROO EF 8 A_FaceTarget
+		TROO EF 8
 		TROO G 6 A_TroopAttack 
 		Goto See
 	Rotating:
-		TNT1 AAAAAAAAAAAAAAA 1 A_SetAngle( angle + 11.25 )
+		TNT1 AAAAAAAAAAAAAAA 1 A_SetAngle( angle + 22.5 )
 		TNT1 A 2 A_FaceTarget
-		TNT1 A 0 PAR_Stop( "MissileFireSpawn" )
+		TNT1 A 0 PAR_Stop( "MissileFXSpawn" )
 		TNT1 A 1 PAR_Stop    // "PAR_Stop()" without arguments stops current thread.
 		Stop
 	Pain:
@@ -24,15 +24,19 @@ Actor EvinceImp: DoomImpParallelBase {
 		TROO H 2 A_Pain
 		Goto See
 	Death:
-		TROO I 0 PAR_Stop( "MissileFireSpawn" )
+		TROO I 0 PAR_Stop( "MissileFXSpawn" )
 		Goto Super::Death
 	XDeath:
-		TROO N 0 PAR_Stop( "MissileFireSpawn" )
+		TROO N 0 PAR_Stop( "MissileFXSpawn" )
 		Goto Super::XDeath
 
-	// It won't loop indefinitely because of the "PAR_Stop( 'MissileFireSpawn' )":
-	MissileFireSpawn:
-		TNT1 A 2 A_SpawnItemEx( "SpawnFire", -radius, FRandom( -96.0, 96.0 ) )
+	// It won't loop indefinitely because of the "PAR_Stop( 'MissileFXSpawn' )":
+	MissileFXSpawn:
+		TNT1 A 0 A_JumpIfCloser( 256.0, "MissileFireFXSpawn" )
+		TNT1 A 2 A_SpawnItemEx( "GrenadeSmokeTrail", FRandom( -radius, radius ), FRandom( -radius, radius ), height + FRandom( 5.0, 30.0 ), 0, 0, FRandom( 0.0, 5.0 ) )
 		Loop
+	MissileFireFXSpawn:
+		TNT1 A 3 A_SpawnItemEx( "SpawnFire", -radius, FRandom( -96.0, 96.0 ) )
+		Goto MissileFXSpawn
 	}
 }
